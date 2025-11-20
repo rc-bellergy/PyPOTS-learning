@@ -1,10 +1,8 @@
 import requests
 import datetime
 import time
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from config import Config
+from auth import get_jwt_token
 
 def get_telemetry_data(
     entityType: str = "DEVICE",
@@ -19,7 +17,7 @@ def get_telemetry_data(
     agg: str = None,
     orderBy: str = "ASC",
     useStrictDataTypes: bool = False,
-    authorization_token: str = os.getenv("AUTHORIZATION_TOKEN")
+    authorization_token: str = None
 ):
     """
     Fetch telemetry data from ThingsBoard API.
@@ -42,8 +40,7 @@ def get_telemetry_data(
     Returns:
         dict: JSON response containing telemetry data, or None if request fails.
     """
-    base_url = "https://ioter.mpiot.com.hk/api/plugins/telemetry"
-    endpoint = f"{base_url}/{entityType}/{entityId}/values/timeseries"
+    endpoint = f"{Config.TELEMETRY_BASE_URL}/{entityType}/{entityId}/values/timeseries"
 
     # Calculate default timestamps (in milliseconds)
     if endTs is None:
@@ -56,7 +53,7 @@ def get_telemetry_data(
         "startTs": startTs,
         "endTs": endTs,
         "limit": limit,
-        "timeZone": timeZone,
+        "timeZone": timeZone or Config.DEFAULT_TIMEZONE,
         "orderBy": orderBy,
         "useStrictDataTypes": useStrictDataTypes
     }
@@ -66,6 +63,22 @@ def get_telemetry_data(
         params["interval"] = interval
     if agg is not None:
         params["agg"] = agg
+
+    # Get authorization token if not provided
+    # if authorization_token is None:
+    #     try:
+    #         # Get JWT token using auth.py function
+    #         token_data = get_jwt_token(
+    #             username=Config.USERNAME,
+    #             password=Config.PASSWORD
+    #         )
+    #         authorization_token = token_data.get('token')
+    #         if not authorization_token:
+    #             print("Error: Failed to get authorization token")
+    #             return None
+    #     except Exception as e:
+    #         print(f"Error getting JWT token: {e}")
+    #         return None
 
     # Add request headers
     headers = {

@@ -1,5 +1,6 @@
 import pandas as pd
 from getTelemetry import get_telemetry_data
+from auth import get_jwt_token
 import os
 from dotenv import load_dotenv
 
@@ -9,22 +10,40 @@ def test_telemetry_to_dataframe():
     """
     Test the get_telemetry_data function and convert the returned JSON to Pandas DataFrame.
     """
-    # Get entity ID and authorization token from environment variables
+    # Get entity ID, username and password from environment variables
     entity_id = os.getenv("TEST_ENTITY_ID", "b57357f0-0934-11f0-ba3c-6989ae50b774")
-    authorization_token = os.getenv("AUTHORIZATION_TOKEN")
+    username = os.getenv("USERNAME")
+    password = os.getenv("PASSWORD")
 
-    if not authorization_token:
-        print("Error: AUTHORIZATION_TOKEN is not set in .env file.")
+    if not username or not password:
+        print("Error: USERNAME or PASSWORD is not set in .env file.")
         return
 
     print(f"Using Entity ID: {entity_id}")
 
-    # Call get_telemetry_data function
+    # Get JWT token using username and password
+    try:
+        print("Getting JWT token...")
+        token_data = get_jwt_token(username=username, password=password)
+        authorization_token = token_data.get('token')
+        
+        if not authorization_token:
+            print("Error: Failed to get authorization token")
+            return
+            
+        print("Successfully obtained JWT token")
+        
+    except Exception as e:
+        print(f"Error getting JWT token: {e}")
+        return
+
+    # Call get_telemetry_data function with the obtained token
     telemetry_data = get_telemetry_data(
         entityId=entity_id,
         keys="ActiveEnergy_kWh,CurrentA_A,CurrentB_A,CurrentC_A",
         limit=10, # Limit to 10 records for testing
-        agg="AVG" # Example aggregation type
+        agg="AVG", # Example aggregation type
+        authorization_token=authorization_token
     )
 
     if telemetry_data:
