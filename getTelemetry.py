@@ -22,30 +22,30 @@ def get_telemetry_data(
     authorization_token: str = os.getenv("AUTHORIZATION_TOKEN")
 ):
     """
-    從 ThingsBoard API 獲取遙測資料。
+    Fetch telemetry data from ThingsBoard API.
 
     Args:
-        entityType (str): 實體類型，例如 "DEVICE"。
-        entityId (str): 實體 ID。
-        keys (str): 要獲取的遙測鍵，以逗號分隔。
-        limit (int): 返回的資料點數量限制。
-        startTs (int): 開始時間戳記（Unix，毫秒）。如果為 None，則預設為 7 天前。
-        endTs (int): 結束時間戳記（Unix，毫秒）。如果為 None，則預設為現在。
-        intervalType (str): 聚合的時間間隔類型 (e.g., "HOUR", "DAY").
-        interval (int): 聚合的時間間隔值.
-        timeZone (str): 時區 (e.g., "Asia/Hong_Kong").
-        agg (str): 聚合類型 (e.g., "NONE", "AVG", "SUM").
-        orderBy (str): 排序方式 (e.g., "ASC", "DESC").
-        useStrictDataTypes (bool): 是否使用嚴格的資料類型。
-        authorization_token (str): 用於 API 請求的 Bearer 令牌。
+        entityType (str): Entity type, e.g., "DEVICE".
+        entityId (str): Entity ID.
+        keys (str): Telemetry keys to fetch, comma-separated.
+        limit (int): Limit on the number of data points to return.
+        startTs (int): Start timestamp (Unix, milliseconds). If None, defaults to 7 days ago.
+        endTs (int): End timestamp (Unix, milliseconds). If None, defaults to now.
+        intervalType (str): Time interval type for aggregation (e.g., "HOUR", "DAY").
+        interval (int): Time interval value for aggregation.
+        timeZone (str): Time zone (e.g., "Asia/Hong_Kong").
+        agg (str): Aggregation type (e.g., "NONE", "AVG", "SUM").
+        orderBy (str): Sorting order (e.g., "ASC", "DESC").
+        useStrictDataTypes (bool): Whether to use strict data types.
+        authorization_token (str): Bearer token for API requests.
 
     Returns:
-        dict: 包含遙測資料的 JSON 回應，如果請求失敗則為 None。
+        dict: JSON response containing telemetry data, or None if request fails.
     """
     base_url = "https://ioter.mpiot.com.hk/api/plugins/telemetry"
     endpoint = f"{base_url}/{entityType}/{entityId}/values/timeseries"
 
-    # 計算預設時間戳記 (以毫秒為單位)
+    # Calculate default timestamps (in milliseconds)
     if endTs is None:
         endTs = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)
     if startTs is None:
@@ -67,7 +67,7 @@ def get_telemetry_data(
     if agg is not None:
         params["agg"] = agg
 
-    # 新增請求頭
+    # Add request headers
     headers = {
         "accept": "application/json",
         "X-Authorization": f"Bearer {authorization_token}"
@@ -75,13 +75,13 @@ def get_telemetry_data(
 
     try:
         response = requests.get(endpoint, params=params, headers=headers)
-        response.raise_for_status()  # 如果請求不成功，將引發 HTTPError
+        response.raise_for_status()  # Raises HTTPError if the request was unsuccessful
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching telemetry data: {e}")
         return None
 
-# # 範例用法 (可選，用於測試)
+# # Example usage (optional, for testing)
 if __name__ == "__main__":
     data = get_telemetry_data()
     if data:
